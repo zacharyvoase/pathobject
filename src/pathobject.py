@@ -337,3 +337,71 @@ class Path(unicode):
         """Return `True` if `self.name` matches the given glob pattern."""
         
         return fnmatch.fnmatch(self.name, pattern)
+    
+    ## Reading and Writing.
+    
+    def open(self, mode='r', bufsize=None):
+        if bufsize is not None:
+            return open(self, mode, bufsize)
+        return open(self, mode)
+    
+    def bytes(self):
+        """Read the contents of this file as a bytestring."""
+        
+        fp = self.open(mode='rb')
+        try:
+            return fp.read()
+        finally:
+            fp.close()
+    
+    def write_bytes(self, bytes, append=False):
+        
+        """
+        Open this file and write the given bytes to it.
+        
+        Default behavior is to truncate any existing file. Add `append=True` to
+        append instead.
+        """
+        
+        fp = self.open(mode=(append and 'ab' or 'wb'))
+        try:
+            fp.write(bytes)
+        finally:
+            fp.close()
+    
+    def text(self, encoding=None, errors='strict'):
+        
+        """
+        Read the contents of this file as text.
+        
+        Universal newline mode is used where available, so <CR><LF> and <CR>
+        line endings are translated to <LF>.
+        
+        Pass `encoding` to decode the contents of the file using the given
+        character set, returning a unicode string. Without this argument, the
+        text is returned as a bytestring.
+        
+        The `errors` keyword argument will be passed as-is to the decoder (see
+        `help(str.decode)` for details). The default value is `'strict'`.
+        """
+        
+        if encoding is None:
+            fp = self.open(mode=(hasattr(file, 'newlines') and 'U' or 'r'))
+            try:
+                return fp.read()
+            finally:
+                fp.close()
+        
+        fp = codecs.open(self, 'r', encoding, errors)
+        try:
+            text = fp.read()
+        finally:
+            fp.close()
+        
+        # Universal newline mode isn't supported by `codecs.open()`, so we have
+        # to perform the replacement manually.
+        return (text.replace(u'\r\n', u'\n')
+                    .replace(u'\r\x85', u'\n')
+                    .replace(u'\r', u'\n')
+                    .replace(u'\x85', u'\n')
+                    .replace(u'\u2028', u'\n'))
