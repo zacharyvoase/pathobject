@@ -332,3 +332,8 @@ class Path(unicode):
             # The paths are identical; return '.' (or equivalent).
             return type(self)(self._path.curdir)
         return type(self)(self._path.join(*segments))
+    
+    def fnmatch(self, pattern):
+        """Return `True` if `self.name` matches the given glob pattern."""
+        
+        return fnmatch.fnmatch(self.name, pattern)
