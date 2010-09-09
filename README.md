@@ -4,6 +4,24 @@ The aim of this library is to provide an `easy_install`-able update of Jason
 Orendorff’s [path](http://pypi.python.org/pypi/path.py) library, free from
 deprecation warnings and compatible with Python 2.3+.
 
+Another major goal of this library is to be path module-agnostic. Using a
+different path module is quite simple:
+
+    >>> from pathobject import Path
+    >>> import ntpath
+    >>> import posixpath
+    
+    >>> POSIXPath = Path.for_path_module(posixpath, name='POSIXPath')
+    >>> POSIXPath('/a/b/c').splitall()
+    [POSIXPath(u'/'), u'a', u'b', u'c']
+    
+    >>> NTPath = Path.for_path_module(ntpath, name='NTPath')
+    >>> NTPath(u'C:\\Documents and Settings\\Zack').splitdrive()
+    (NTPath(u'C:'), u'\\Documents and Settings\\Zack')
+    
+The benefit of this is that you can manipulate Windows paths from a UNIX system,
+and vice versa—something simple reliance on `os.path` doesn’t allow.
+
 
 ## (Un)license
 
