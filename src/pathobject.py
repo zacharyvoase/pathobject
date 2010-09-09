@@ -2,7 +2,6 @@
 
 """pathobject.py - A utility class for operating on pathnames."""
 
-
 import codecs
 import fnmatch
 import glob
@@ -359,8 +358,8 @@ class Path(unicode):
         """
         Open this file and write the given bytes to it.
         
-        Default behavior is to truncate any existing file. Add `append=True` to
-        append instead.
+        The default behavior is to truncate any existing file. Use `append=True`
+        to append instead.
         """
         
         fp = self.open(mode=(append and 'ab' or 'wb'))
@@ -378,7 +377,7 @@ class Path(unicode):
         line endings are translated to <LF>.
         
         Pass `encoding` to decode the contents of the file using the given
-        character set, returning a unicode string. Without this argument, the
+        character set, returning a Unicode string. Without this argument, the
         text is returned as a bytestring.
         
         The `errors` keyword argument will be passed as-is to the decoder (see
@@ -405,3 +404,48 @@ class Path(unicode):
                     .replace(u'\r', u'\n')
                     .replace(u'\x85', u'\n')
                     .replace(u'\u2028', u'\n'))
+    
+    def write_text(self, text, encoding=None, errors='strict', linesep=os.linesep, append=False):
+        
+        """
+        Write the given text to this file.
+        
+        There are two differences between `write_text()` and `write_bytes()`:
+        newline handling and Unicode handling.
+        
+        The default behavior is to truncate any existing file. Use `append=True`
+        to append instead.
+        
+        If `text` is a Unicode string, the `encoding` and `errors` parameters
+        will be used to encode it to a bytestring. In this case, `encoding`
+        defaults to `sys.getdefaultencoding()`. If `text` is already a
+        bytestring, no encoding occurs, and passing a value for `encoding` will
+        raise an `AssertionError`.
+        
+        By default, `write_text()` will normalize line endings to `os.linesep`.
+        You can customize this by passing a `linesep` keyword argument. If
+        `linesep` is `None`, the line endings will be left as-is.
+        """
+        
+        if isinstance(text, unicode):
+            if linesep is not None:
+                # Convert all standard end-of-line sequences to
+                # ordinary newline characters.
+                text = (text.replace(u'\r\n', u'\n')
+                            .replace(u'\r\x85', u'\n')
+                            .replace(u'\r', u'\n')
+                            .replace(u'\x85', u'\n')
+                            .replace(u'\u2028', u'\n'))
+                text = text.replace(u'\n', linesep)
+            if encoding is None:
+                encoding = sys.getdefaultencoding()
+            bytes = text.encode(encoding, errors)
+        else:
+            assert encoding is None, "Passed an encoding for a bytestring."
+            
+            if linesep is not None:
+                text = (text.replace('\r\n', '\n')
+                            .replace('\r', '\n'))
+                bytes = text.replace('\n', linesep)
+        
+        self.write_bytes(bytes, append=append)
