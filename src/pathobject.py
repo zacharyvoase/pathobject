@@ -13,7 +13,7 @@ import sys
 import warnings
 
 __all__ = ["Path"]
-__version__ = "0.1"
+__version__ = "0.0.1"
 
 
 ## Some functional utilities to save code later on.
