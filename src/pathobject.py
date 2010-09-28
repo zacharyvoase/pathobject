@@ -339,8 +339,18 @@ class Path(unicode):
 
     ## Reading and Writing.
 
-    def open(self, mode='r', bufsize=None):
-        if bufsize is not None:
+    def open(self, mode='r', bufsize=None, encoding=None, errors='strict'):
+
+        """
+        Open this file, returning a file handler.
+
+        You can open a file with `codecs.open()` by passing an `encoding`
+        keyword argument.
+        """
+
+        if encoding is not None:
+            return codecs.open(self, mode=mode, bufsize=bufsize, encoding=encoding, errors=errors)
+        elif bufsize is not None:
             return open(self, mode, bufsize)
         return open(self, mode)
 
