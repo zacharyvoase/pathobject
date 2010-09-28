@@ -472,3 +472,27 @@ class Path(unicode):
                 bytes = normalize_line_endings(text, linesep=linesep)
 
         self.write_bytes(bytes, append=append)
+
+    def lines(self, encoding=None, errors='strict', retain=True, linesep='\n'):
+
+        """
+        Iterate through all the lines in this file.
+
+        Pass `retain=False` to strip the newlines from each line. Otherwise,
+        all newlines are normalized to `linesep` (default <LF>). The semantics
+        for the `encoding` and `errors` arguments are similar to those for
+        `Path.open()`.
+
+        Note that `Path.lines().close()` will only work in Python 2.5+; if you
+        are using an earlier version of Python you will need to exhaust the
+        generator to properly close the file handle.
+        """
+
+        fp = self.open(encoding=encoding, errors=errors)
+        linesep = retain and linesep or ''
+
+        try:
+            for line in fp:
+                yield normalize_line_endings(line, linesep=linesep)
+        finally:
+            fp.close()
