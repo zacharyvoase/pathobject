@@ -76,6 +76,30 @@ def defined_if(predicate):
     return decorator
 
 
+def normalize_line_endings(text, linesep=u'\n'):
+
+    """
+    Normalize a string's line endings to `linesep` (default <LF>).
+
+    The provided string can be either a `str` or a `unicode`.
+
+    Pass `linesep=''` to remove line endings entirely. This only makes sense
+    when operating on a single line.
+    """
+
+    if isinstance(text, str):
+        return (text.replace('\r\n', '\n')
+                    .replace('\r', '\n')
+                    .replace('\n', linesep))
+
+    return (text.replace(u'\r\n', u'\n')
+                .replace(u'\r\x85', u'\n')
+                .replace(u'\r', u'\n')
+                .replace(u'\x85', u'\n')
+                .replace(u'\u2028', u'\n')
+                .replace(u'\n', linesep))
+
+
 class Path(unicode):
 
     """A utility class for operating on pathnames."""
@@ -409,11 +433,7 @@ class Path(unicode):
 
         # Universal newline mode isn't supported by `codecs.open()`, so we have
         # to perform the replacement manually.
-        return (text.replace(u'\r\n', u'\n')
-                    .replace(u'\r\x85', u'\n')
-                    .replace(u'\r', u'\n')
-                    .replace(u'\x85', u'\n')
-                    .replace(u'\u2028', u'\n'))
+        return normalize_line_endings(text, linesep=u'\n')
 
     def write_text(self, text, encoding=None, errors='strict', linesep=os.linesep, append=False):
 
@@ -441,12 +461,7 @@ class Path(unicode):
             if linesep is not None:
                 # Convert all standard end-of-line sequences to
                 # ordinary newline characters.
-                text = (text.replace(u'\r\n', u'\n')
-                            .replace(u'\r\x85', u'\n')
-                            .replace(u'\r', u'\n')
-                            .replace(u'\x85', u'\n')
-                            .replace(u'\u2028', u'\n'))
-                text = text.replace(u'\n', linesep)
+                text = normalize_line_endings(text, linesep=linesep)
             if encoding is None:
                 encoding = sys.getdefaultencoding()
             bytes = text.encode(encoding, errors)
@@ -454,8 +469,6 @@ class Path(unicode):
             assert encoding is None, "Passed an encoding for a bytestring."
 
             if linesep is not None:
-                text = (text.replace('\r\n', '\n')
-                            .replace('\r', '\n'))
-                bytes = text.replace('\n', linesep)
+                bytes = normalize_line_endings(text, linesep=linesep)
 
         self.write_bytes(bytes, append=append)
